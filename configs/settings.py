@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import environ
+from django.core.exceptions import ValidationError
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -124,9 +125,14 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media Files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+def file_upload_validator(file):
+    if not file.name.endswith(('.pdf', '.docx')):
+        raise ValidationError("Only .pdf and .docx files are allowed.")
