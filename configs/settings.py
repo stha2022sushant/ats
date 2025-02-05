@@ -28,10 +28,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ats',
+    # 'ats',
     'strawberry_django',
     'debug_toolbar',
     'rest_framework',
+    'apps.resume',
+    'apps.candidate',
 
 ]
 

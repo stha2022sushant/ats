@@ -21,7 +21,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('api.urls'))
+    path('resume/', include('apps.resume.urls')),
+    path('candidate/', include('apps.candidate.urls')),
     # path("__debug__/", include("debug_toolbar.urls")),
 ]
 

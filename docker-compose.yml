@@ -25,4 +25,5 @@ services:
 
 volumes:
   ats_data:
-    name: ats_data
+    # name: ats_data
+    external: true

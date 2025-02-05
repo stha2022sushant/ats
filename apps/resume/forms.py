@@ -1,8 +1,8 @@
 from django import forms
-from ats.models import UploadedFile
+from apps.resume.models import ResumeFile
 
 
 class FileUploadForm(forms.ModelForm):
     class Meta:
-        model = UploadedFile
+        model = ResumeFile
         fields = ['file']
