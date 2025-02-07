@@ -5,4 +5,4 @@ from apps.candidate.models import Candidate
 class CandidateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Candidate
-        fields = ['name', 'email', 'phone']
+        fields = ['name', 'email', 'phone', 'parsed_text']
