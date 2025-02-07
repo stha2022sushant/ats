@@ -40,8 +40,8 @@ class Candidate(models.Model):
     )
 
     # Resume Relationship & Parsed Text
-    resume = models.ForeignKey(ResumeFile, on_delete=models.CASCADE, related_name="candidate", null=True, blank=True)
+    # resume = models.ForeignKey(ResumeFile, on_delete=models.CASCADE, related_name="candidate", null=True, blank=True)
     parsed_text = models.TextField(null=True, blank=True)  # Store raw extracted text for searching
 
     def __str__(self):
-        return self.full_name or self.email
+        return self.name or self.email
