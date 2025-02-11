@@ -14,6 +14,6 @@ class ResumeFile(models.Model):
                 if os.path.isfile(existing.file.path):
                     os.remove(existing.file.path)
         super().save(*args, **kwargs)
-   
+
     def __str__(self):
         return self.file.name

@@ -11,8 +11,8 @@ class Candidate(models.Model):
 
     # Address Information
     address = models.TextField(null=True, blank=True)
-    city = models.CharField(max_length=50, null=True, blank=True)
-    country = models.CharField(max_length=100, null=True, blank=True)
+    # city = models.CharField(max_length=50, null=True, blank=True)
+    # country = models.CharField(max_length=100, null=True, blank=True)
 
     # Professional Details
     Linkedin_profile = models.URLField(null=True, blank=True)
@@ -45,3 +45,26 @@ class Candidate(models.Model):
 
     def __str__(self):
         return self.name or self.email
+
+
+class Skill(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class CandidateSkill(models.Model):
+    candidate = models.ForeignKey('Candidate', on_delete=models.CASCADE, related_name="candidate_skills")
+    skill = models.ForeignKey(Skill, on_delete=models.CASCADE, related_name="candidate_skills")
+    proficiency_level = models.CharField(max_length=50, choices=[
+        ('Beginner', 'Beginner'),
+        ('Intermediate', 'Intermediate'),
+        ('Advanced', 'Advanced'),
+        ('Expert', 'Expert')
+    ])
+
+    years_of_experience = models.PositiveBigIntegerField()
+
+    def __str__(self):
+        return f"{self.candidate.name} - {self.skill.name} ({self.proficiency_level})"
