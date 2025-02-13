@@ -101,6 +101,8 @@ def reuse_skills(skills):
         print(f"Skill: {skill}")
 
 # Usage
+
+
 pdf_path = "/src/ats/media/uploads/sushant-cvs.pdf"  # Replace with your PDF file path
 text_info = extract_text_size_and_boldness(pdf_path)
 

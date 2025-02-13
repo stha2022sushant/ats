@@ -75,8 +75,8 @@ def extract_skills(text):
 
         if len(words) > 2:
             column_1.append(words[0])
-            column_2.append(" ".join(words[1:2]))  
-            column_3.append(" ".join(words[2:]))  
+            column_2.append(" ".join(words[1:2]))
+            column_3.append(" ".join(words[2:]))
         elif len(words) == 2:
             column_1.append(words[0])
             column_2.append(words[1])
