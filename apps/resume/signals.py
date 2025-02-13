@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from apps.resume.models import ResumeFile
 from apps.candidate.models import Candidate
 import pdfplumber
+import fitz
 import re
 import os
 from docx import Document
@@ -28,9 +29,9 @@ def extract_details(text):
             break
 
     return {
-        "name": name, 
-        "emails": emails, 
-        "phones": phones, 
+        "name": name,
+        "emails": emails,
+        "phones": phones,
         "addresses": addresses
     }
 
