@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from apps.resume.models import ResumeFile
-from apps.candidate.models import Candidate
+from apps.candidate.models import Candidate,Skill, CandidateSkill
 import pdfplumber
 import fitz
 import re
@@ -36,7 +36,7 @@ def extract_details(text):
     }
 
 
-def extract_section(text, section_name="KEY COMPETENCIES"):
+def extract_section(text, section_name):
     """
     Extracts the 'KEY COMPETENCIES' section from the resume.
     """
@@ -53,43 +53,44 @@ def extract_section(text, section_name="KEY COMPETENCIES"):
             section_end = text.find(heading)
             break
 
-    section_content = text[section_start:section_end].strip()
-    return section_content.replace(section_name, "").strip()
-
+    # section_content = text[section_start:section_end].strip()
+    # return section_content.replace(section_name, "").strip()
+    return text[section_start:section_end].replace(section_name, "").strip()
 
 def extract_skills(text):
     """
     Extracts structured skills from the 'KEY COMPETENCIES' section.
     """
     competencies_section = extract_section(text, "KEY COMPETENCIES")
+    skills = re.findall(r'\b[A-Za-z-]+\b', competencies_section)
+    # competencies_lines = competencies_section.split('\n')
+    return list(set(skills))
 
-    competencies_lines = competencies_section.split('\n')
-
-    column_1 = []
-    column_2 = []
-    column_3 = []
-
-    for line in competencies_lines:
-        line = line.strip()
-        words = line.split()
-
-        if len(words) > 2:
-            column_1.append(words[0])
-            column_2.append(" ".join(words[1:2]))
-            column_3.append(" ".join(words[2:]))
-        elif len(words) == 2:
-            column_1.append(words[0])
-            column_2.append(words[1])
-            column_3.append('')
-        elif len(words) == 1:
-            column_1.append(words[0])
-            column_2.append('')
-            column_3.append('')
-
-    skills = column_1 + column_2 + column_3
-    skills = [skill for skill in skills if skill]  # Remove empty strings
-
-    return skills
+#     column_1 = []
+#     column_2 = []
+#     column_3 = []
+# 
+#     for line in competencies_lines:
+#         line = line.strip()
+#         words = line.split()
+# 
+#         if len(words) > 2:
+#             column_1.append(words[0])
+#             column_2.append(" ".join(words[1:2]))
+#             column_3.append(" ".join(words[2:]))
+#         elif len(words) == 2:
+#             column_1.append(words[0])
+#             column_2.append(words[1])
+#             column_3.append('')
+#         elif len(words) == 1:
+#             column_1.append(words[0])
+#             column_2.append('')
+#             column_3.append('')
+# 
+#     skills = column_1 + column_2 + column_3
+#     skills = [skill for skill in skills if skill]  # Remove empty strings
+# 
+#     return skills
 
 
 @receiver(post_save, sender=ResumeFile)
@@ -124,7 +125,15 @@ def parse_and_update_candidate(sender, instance, **kwargs):
             "email": extracted_data["emails"][0] if extracted_data["emails"] else None,
             "phone": extracted_data["phones"][0] if extracted_data["phones"] else None,
             "address": extracted_data["addresses"][0] if extracted_data["addresses"] else None,
-            "candidate_skills": ", ".join(extracted_skills) if extracted_skills else None,
+            # "skills": ", ".join(extracted_skills) if extracted_skills else None,
             "parsed_text": text,
         },
     )
+
+    for skill_name in extracted_skills:
+        skill_obj, _ = Skill.objects.get_or_create(name=skill_name)
+        CandidateSkill.objects.update_or_create(
+            candidate=candidate,
+            skill=skill_obj,
+            defaults={"proficiency_level": "Beginner", "years_of_experience": 0}
+        )
