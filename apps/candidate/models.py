@@ -27,7 +27,9 @@ class Skill(models.Model):
 class CandidateSkill(models.Model):
     candidate = models.ForeignKey('Candidate', on_delete=models.CASCADE, related_name="candidate_skills")
     skill = models.ForeignKey(Skill, on_delete=models.CASCADE, related_name="candidate_skills")
-    proficiency_level = models.CharField(max_length=50, choices=[
+    parsed_skills = models.TextField(null=True, blank=True)  # Store raw extracted text for searching
+
+    proficiency_level = models.CharField(max_length=50, null=True, blank=True, choices=[
         ('Beginner', 'Beginner'),
         ('Intermediate', 'Intermediate'),
         ('Advanced', 'Advanced'),
@@ -46,6 +48,7 @@ class Education(models.Model):
     degree = models.CharField(max_length=20, null=True, blank=True)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
+    parsed_text = models.TextField(null=True, blank=True)  # Store raw extracted text for searching
 
     def __str__(self):
         degree = self.degree if self.degree else "Unknown Degree"
@@ -57,6 +60,7 @@ class Experience(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name="experience")
     company_name = models.CharField(max_length=25, null=True, blank=True)
     job_title = models.CharField(max_length=50, null=True, blank=True)
+    parsed_text = models.TextField(null=True, blank=True)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
 
@@ -71,6 +75,7 @@ class AwardAndCertification(models.Model):
     name = models.CharField(max_length=150, null=True, blank=True)
     issue_date = models.DateField(null=True, blank=True)
     issuing_organization = models.CharField(max_length=100, null=True, blank=True)
+    parsed_text = models.TextField(null=True, blank=True)
 
     def __str__(self):
         name = self.name if self.name else "Unknown Issue Date"
@@ -82,6 +87,7 @@ class Project(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name="projects")
     title = models.CharField(max_length=100, null=True, blank=True)
     description = models.CharField(max_length=255, null=True, blank=True)
+    parsed_text = models.TextField(null=True, blank=True)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
 

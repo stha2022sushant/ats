@@ -9,7 +9,7 @@ class CandidateSerializer(serializers.ModelSerializer):
 
 
 class CandidateSkillSerializers(serializers.ModelSerializer):
-    skill_name = serializers.ReadOnlyField(source='skill.name') 
+    skill_name = serializers.ReadOnlyField(source='skill.name')
 
     class Meta:
         model = CandidateSkill
@@ -29,31 +29,31 @@ class CandidateSkillSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CandidateSkill
-        fields = ['id', 'skill', 'skill_name', 'proficiency_level', 'years_of_experience']
+        fields = ['id', 'skill', 'skill_name', 'proficiency_level', 'years_of_experience', 'parsed_skills']
 
 
 class EducationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Education
-        fields = '__all__'
+        fields = ['institution_name', 'degree', 'parsed_text']
 
 
 class ExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Experience
-        fields = '__all__'
+        fields = ['company_name', 'job_title', 'parsed_text']
 
 
 class AwardAndCertificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = AwardAndCertification
-        fields = '__all__'
+        fields = ['name', 'issuing_organization', 'parsed_text']
 
 
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = '__all__'
+        fields = ['title', 'description', 'parsed_text']
 
 
 class CandidateSerializer(serializers.ModelSerializer):
