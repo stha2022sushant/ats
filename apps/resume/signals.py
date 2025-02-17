@@ -13,19 +13,30 @@ def extract_details(text):
     """
     Extracts name, email, phone, and address from resume text.
     """
+    # Normalize text: remove unnecessary newlines, multiple spaces
+    clean_text = " ".join(text.split()).strip()
+
+    # Regular expressions
     email_regex = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
     phone_regex = r"\+?\d{1,3}[-.\s]?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}"
-    address_regex = r"([A-Za-z]+, Nepal)"
+    address_regex = r"([A-Za-z\s,-]+(?:Nepal|Kathmandu|Lalitpur|Bhaktapur))"
 
-    emails = re.findall(email_regex, text)
-    phones = re.findall(phone_regex, text)
-    addresses = re.findall(address_regex, text)
+    # Extract details using regex
+    emails = re.findall(email_regex, clean_text)
+    phones = re.findall(phone_regex, clean_text)
+    addresses = re.findall(address_regex, clean_text)
 
+    # Extract name (first few lines checked)
     name = None
-    lines = text.split("\n")
-    for line in lines[:5]:  # Checking the first 5 lines for a name
-        if len(line.split()) >= 2 and all(word[0].isupper() for word in line.split()):
-            name = line.strip()
+    lines = text.split("\n")  # Use line-based extraction for names
+    for line in lines[:10]:  # Checking first 10 lines for a name
+        line = line.strip()
+        if (
+            len(line.split()) >= 2  # At least two words
+            and all(word[0].isupper() or word.lower() in ["de", "van", "mc"] for word in line.split())  # Handle lowercase prefixes
+            and not any(keyword in line.lower() for keyword in ["email", "phone", "linkedin", "summary", "experience"])  # Exclude headers
+        ):
+            name = line
             break
 
     return {
@@ -117,40 +128,60 @@ def extract_education(text):
 
 def extract_experience(text):
     """
-    Extract work experience from the resume text.
+    Extracts work experience details including job title, company name, and dates.
     """
-    experience_section = extract_section(text, "EXPERIENCE") or extract_section(text, "WORK EXPERIENCE")
-    experience_entries = re.findall(r"([\w\s]+),\s*([\w\s]+),\s*(\d{4})-(\d{4})?", experience_section)
+    # Possible section headers for experience
+    experience_section_names = ["WORK EXPERIENCE", "PROFESSIONAL EXPERIENCE", "EMPLOYMENT HISTORY", "EXPERIENCE"]
 
-    experience_list = []
+    # Find the relevant section
+    experience_section = None
+    for section in experience_section_names:
+        match = re.search(rf"{section}.*?\n(.*?)(?=\n[A-Z ]{{3,}}|\Z)", text, re.S | re.I)
+        if match:
+            experience_section = match.group(1).strip()
+            break  # Stop at the first found section
+
+    if not experience_section:
+        return []
+
+    # Patterns for extracting job title, company, and dates
+    job_title_pattern = r"(?:(?:Title|Position|Job)[:\s]*)?([A-Za-z0-9 ,&-]+)"
+    company_pattern = r"(?:(?:Company|Employer)[:\s]*)?([A-Za-z0-9 ,&-]+)"
+    date_patterns = r"(\d{4})\s*[-–]\s*(\d{4}|Present|Ongoing)"
+
+    # Split experiences by bullet points or new lines
+    experience_entries = re.split(r"\n\s*\n|\n[-•*]\s*", experience_section)
+
+    experiences_data = []
     for entry in experience_entries:
-        experience_list.append({
-            "company_name": entry[0].strip(),
-            "job_title": entry[1].strip(),
-            "start_date": f"{entry[2]}-01-01" if entry[2] else None,
-            "end_date": f"{entry[3]}-12-31" if entry[3] else None
+        entry = entry.strip()
+        if not entry:
+            continue
+
+        # Extract job title (first line or bolded text)
+        title_match = re.match(job_title_pattern, entry)
+        job_title = title_match.group(1).strip() if title_match else None
+
+        # Extract company name (common words like "Company", "Inc.", etc.)
+        company_match = re.search(company_pattern, entry)
+        company_name = company_match.group(1).strip() if company_match else None
+
+        # Extract dates
+        date_match = re.search(date_patterns, entry)
+        start_date, end_date = date_match.groups() if date_match else (None, None)
+
+        # Store extracted experience details
+        experiences_data.append({
+            "job_title": job_title if job_title else None,
+            "company_name": company_name if company_name else None,
+            "start_date": start_date,
+            "end_date": end_date,
+            "parsed_experience_text": entry  # Store raw experience text
         })
 
-    return experience_list
-
+    return experiences_data
 # Project Extractions
 
-
-# def extract_projects(text):
-#     """
-#     Extract project details from the resume text.
-#     """
-#     project_section = extract_section(text, "PROJECTS")
-#     project_entries = re.findall(r"([\w\s]+):\s*(.+)", project_section)
-# 
-#     projects_list = []
-#     for entry in project_entries:
-#         projects_list.append({
-#             "title": entry[0].strip(),
-#             "description": entry[1].strip()
-#         })
-# 
-#     return projects_list
 
 def extract_projects(text):
     """
@@ -173,7 +204,7 @@ def extract_projects(text):
     # Patterns for project titles, descriptions, and dates
     project_title_pattern = r"(?:(?:Title|Project|Project Name)[:\s]*)?([A-Za-z0-9 ,&-]+)"
     date_patterns = r"(\d{4})\s*[-–]\s*(\d{4}|Present|Ongoing)"
-    
+
     # Split projects by bullet points or new lines
     project_entries = re.split(r"\n\s*\n|\n[-•*]\s*", project_section)
 
@@ -205,26 +236,60 @@ def extract_projects(text):
     return projects_data
 
 
-# Extract Awards and Certifications
-
-
 def extract_awards_and_certifications(text):
     """
-    Extract awards and certifications from the resume text.
+    Extracts awards and certifications including name, issuing organization, and issue date.
     """
-    awards_section = extract_section(text, "AWARDS AND CERTIFICATIONS") or extract_section(text, "CERTIFICATIONS")
+    # Possible section headers (more flexible)
+    awards_certifications_section_names = [
+        r"\bAWARDS\b", r"\bCERTIFICATIONS\b", r"\bHONORS & AWARDS\b",
+        r"\bLICENSES & CERTIFICATIONS\b", r"\bACHIEVEMENTS\b", r"\bRECOGNITIONS\b"
+    ]
 
-    awards_list = []
-    award_entries = re.findall(r"([\w\s]+),\s*([\w\s]+),\s*(\d{4})?", awards_section)
+    # Extracting the relevant section
+    section_pattern = rf"({'|'.join(awards_certifications_section_names)})\s*\n(.*?)(?=\n[A-Z ]{{3,}}|\Z)"
+    section_match = re.search(section_pattern, text, re.S | re.I)
 
-    for entry in award_entries:
-        awards_list.append({
-            "name": entry[0].strip(),
-            "issuing_organization": entry[1].strip(),
-            "issue_date": f"{entry[2]}-01-01" if entry[2] else None
+    if not section_match:
+        return []
+
+    awards_certifications_section = section_match.group(2).strip()
+
+    # Patterns for extracting award/certification details
+    award_cert_name_pattern = r"^([\w\s,.'\-&()]+)"
+    issuing_org_pattern = r"(?:by|from|issued by|provided by|offered by)\s+([\w\s,.'\-&()]+)"
+    date_pattern = r"((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}|\d{1,2}/\d{4}|\b\d{4}\b)"
+
+    # Splitting awards/certifications by bullet points or new lines
+    award_cert_entries = re.split(r"\n\s*\n|\n[-•*]\s*", awards_certifications_section)
+
+    awards_certifications_data = []
+    for entry in award_cert_entries:
+        entry = entry.strip()
+        if not entry:
+            continue
+
+        # Extract award/certification name
+        name_match = re.match(award_cert_name_pattern, entry)
+        award_cert_name = name_match.group(1).strip() if name_match else None
+
+        # Extract issuing organization
+        org_match = re.search(issuing_org_pattern, entry)
+        issuing_organization = org_match.group(1).strip() if org_match else None
+
+        # Extract issue date
+        date_match = re.search(date_pattern, entry)
+        issue_date = date_match.group(1) if date_match else None
+
+        # Store extracted awards/certifications details
+        awards_certifications_data.append({
+            "name": award_cert_name if award_cert_name else None,
+            "issuing_organization": issuing_organization if issuing_organization else None,
+            "issue_date": issue_date,
+            "parsed_text": entry  # Store raw text for reference
         })
 
-    return awards_list
+    return awards_certifications_data
 
 
 @receiver(post_save, sender=ResumeFile)
@@ -285,7 +350,8 @@ def parse_and_update_candidate(sender, instance, **kwargs):
             defaults={
                 "start_date": edu["start_date"],
                 "end_date": edu["end_date"],
-                "parsed_text": text
+                "parsed_text": text,
+                # "parsed_edu": edu["parsed_experience_text"]
             }
         )
 

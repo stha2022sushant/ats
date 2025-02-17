@@ -35,7 +35,7 @@ class CandidateSkillSerializer(serializers.ModelSerializer):
 class EducationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Education
-        fields = ['institution_name', 'degree', 'parsed_text']
+        fields = ['institution_name', 'degree', 'parsed_text', 'parsed_edu']
 
 
 class ExperienceSerializer(serializers.ModelSerializer):

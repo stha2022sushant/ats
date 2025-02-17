@@ -49,6 +49,7 @@ class Education(models.Model):
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     parsed_text = models.TextField(null=True, blank=True)  # Store raw extracted text for searching
+    parsed_edu = models.TextField(null=True, blank=True)
 
     def __str__(self):
         degree = self.degree if self.degree else "Unknown Degree"
@@ -58,7 +59,7 @@ class Education(models.Model):
 
 class Experience(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name="experience")
-    company_name = models.CharField(max_length=25, null=True, blank=True)
+    company_name = models.CharField(max_length=250, null=True, blank=True)
     job_title = models.CharField(max_length=50, null=True, blank=True)
     parsed_text = models.TextField(null=True, blank=True)
     start_date = models.DateField(null=True, blank=True)
