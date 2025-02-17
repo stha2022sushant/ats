@@ -70,21 +70,47 @@ def extract_skills(text):
 
 def extract_education(text):
     """
-    Extract education details from the resume text.
+    Extracts education details from the resume text by locating the relevant section.
     """
-    education_section = extract_section(text, "EDUCATION") or extract_section(text, "ACADEMIC QUALIFICATIONS")
-    education_entries = re.findall(r"([\w\s]+),\s*([\w\s]+),\s*(\d{4})-(\d{4})?", education_section)
+    # Possible section headers for education
+    education_section_names = ["EDUCATION", "ACADEMIC QUALIFICATIONS", "EDUCATIONAL BACKGROUND"]
 
-    education_list = []
-    for entry in education_entries:
-        education_list.append({
-            "institution_name": entry[0].strip(),
-            "degree": entry[1].strip(),
-            "start_date": f"{entry[2]}-01-01" if entry[2] else None,
-            "end_date": f"{entry[3]}-12-31" if entry[3] else None
+    # Find the relevant section
+    education_section = None
+    for section in education_section_names:
+        match = re.search(rf"{section}.*?\n(.*?)(?=\n[A-Z ]{{3,}}|\Z)", text, re.S | re.I)
+        if match:
+            education_section = match.group(1).strip()
+            break  # Stop at the first found section
+
+    if not education_section:
+        return []
+
+    # Patterns for degrees, institutions, and dates
+    degree_patterns = r"(Bachelor|Master|PhD|Diploma|Associate|B\.Sc|M\.Sc|B\.A|M\.A|B\.E|M\.E|B\.Tech|M\.Tech)[^,\n]*"
+    institution_patterns = r"([A-Za-z0-9 .,&-]+(?:University|College|Institute|School|Academy|Engineering College|Technology|Polytechnic))"
+    date_patterns = r"(\d{4})\s*[-–]\s*(\d{4}|Present|Ongoing)"
+
+    # Extract matches
+    degrees = re.findall(degree_patterns, education_section, re.I)
+    institutions = re.findall(institution_patterns, education_section)
+    dates = re.findall(date_patterns, education_section)
+
+    # Structuring the extracted education details
+    education_data = []
+    for i in range(max(len(degrees), len(institutions), len(dates))):
+        degree = degrees[i] if i < len(degrees) else None
+        institution = institutions[i] if i < len(institutions) else None
+        start_date, end_date = dates[i] if i < len(dates) else (None, None)
+
+        education_data.append({
+            "degree": degree.strip() if degree else None,
+            "institution": institution.strip() if institution else None,
+            "start_date": start_date,
+            "end_date": end_date
         })
 
-    return education_list
+    return education_data
 
 # Experiences Sections
 
@@ -110,21 +136,73 @@ def extract_experience(text):
 # Project Extractions
 
 
+# def extract_projects(text):
+#     """
+#     Extract project details from the resume text.
+#     """
+#     project_section = extract_section(text, "PROJECTS")
+#     project_entries = re.findall(r"([\w\s]+):\s*(.+)", project_section)
+# 
+#     projects_list = []
+#     for entry in project_entries:
+#         projects_list.append({
+#             "title": entry[0].strip(),
+#             "description": entry[1].strip()
+#         })
+# 
+#     return projects_list
+
 def extract_projects(text):
     """
-    Extract project details from the resume text.
+    Extracts project details including title, description, and dates.
     """
-    project_section = extract_section(text, "PROJECTS")
-    project_entries = re.findall(r"([\w\s]+):\s*(.+)", project_section)
+    # Possible section headers for projects
+    project_section_names = ["PROJECTS", "PERSONAL PROJECTS", "RESEARCH PROJECTS", "WORK PROJECTS"]
 
-    projects_list = []
+    # Find the relevant section
+    project_section = None
+    for section in project_section_names:
+        match = re.search(rf"{section}.*?\n(.*?)(?=\n[A-Z ]{{3,}}|\Z)", text, re.S | re.I)
+        if match:
+            project_section = match.group(1).strip()
+            break  # Stop at the first found section
+
+    if not project_section:
+        return []
+
+    # Patterns for project titles, descriptions, and dates
+    project_title_pattern = r"(?:(?:Title|Project|Project Name)[:\s]*)?([A-Za-z0-9 ,&-]+)"
+    date_patterns = r"(\d{4})\s*[-–]\s*(\d{4}|Present|Ongoing)"
+    
+    # Split projects by bullet points or new lines
+    project_entries = re.split(r"\n\s*\n|\n[-•*]\s*", project_section)
+
+    projects_data = []
     for entry in project_entries:
-        projects_list.append({
-            "title": entry[0].strip(),
-            "description": entry[1].strip()
+        entry = entry.strip()
+        if not entry:
+            continue
+
+        # Extract project title (first bold text or first line)
+        title_match = re.match(project_title_pattern, entry)
+        title = title_match.group(1).strip() if title_match else None
+
+        # Extract dates
+        date_match = re.search(date_patterns, entry)
+        start_date, end_date = date_match.groups() if date_match else (None, None)
+
+        # Extract description (remaining text)
+        description = entry.replace(title, "").strip() if title else entry.strip()
+
+        projects_data.append({
+            "title": title if title else None,
+            "description": description if description else None,
+            "start_date": start_date,
+            "end_date": end_date,
+            "parsed_project_text": entry  # Store raw project text
         })
 
-    return projects_list
+    return projects_data
 
 
 # Extract Awards and Certifications
@@ -202,7 +280,7 @@ def parse_and_update_candidate(sender, instance, **kwargs):
     for edu in extracted_education:
         Education.objects.update_or_create(
             candidate=candidate,
-            institution_name=edu["institution_name"],
+            institution_name=edu["institution"],
             degree=edu["degree"],
             defaults={
                 "start_date": edu["start_date"],
