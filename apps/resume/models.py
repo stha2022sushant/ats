@@ -1,6 +1,6 @@
 from django.db import models
 import os
-from config.settings import file_upload_validator
+from apps.resume.validators import file_upload_validator
 
 
 class ResumeFile(models.Model):

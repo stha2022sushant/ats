@@ -4,7 +4,7 @@ from .views import CandidateViewSet, CandidateSkillViewSet, EducationViewSet, Ex
 
 router = DefaultRouter()
 router.register(r'candidates', CandidateViewSet, basename='candidate')
-router.register(r'candidateskills-', CandidateSkillViewSet, basename='candidate-skill')
+router.register(r'candidate-skills', CandidateSkillViewSet, basename='candidate-skill')
 router.register(r'education', EducationViewSet, basename='education')
 router.register(r'experience', ExperienceViewSet, basename='experience')
 router.register(r'awards-certifications', AwardAndCertificationViewSet, basename='awards-certifications')

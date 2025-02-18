@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from apps.resume.models import ResumeFile
 from apps.candidate.models import Candidate, Skill, CandidateSkill, Education, Experience, Project, AwardAndCertification
@@ -387,3 +387,10 @@ def parse_and_update_candidate(sender, instance, **kwargs):
                 "parsed_text": text
             }
         )
+
+
+@receiver(post_delete, sender=ResumeFile)
+def delete_file_on_delete(sender, instance, **kwargs):
+    """Deletes the file from storage when a ResumeFile object is deleted."""
+    if instance.file and os.path.isfile(instance.file.path):
+        os.remove(instance.file.path)

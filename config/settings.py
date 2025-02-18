@@ -136,11 +136,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-def file_upload_validator(file):
-    if not file.name.endswith(('.pdf', '.docx')):
-        raise ValidationError("Only .pdf and .docx files are allowed.")
-
-
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,  # Set default page size
