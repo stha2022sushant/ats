@@ -75,7 +75,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 env = environ.Env()
-environ.Env.read_env()
+# environ.Env.read_env()
+environ.Env.read_env(os.path.join(BASE_DIR, ".env.dev"))
 
 DATABASES = {
     'default': {

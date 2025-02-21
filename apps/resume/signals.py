@@ -1,12 +1,12 @@
+import os
+import fitz
+import pdfplumber
+import re
 from django.db.models.signals import post_save, post_delete
+from docx import Document
 from django.dispatch import receiver
 from apps.resume.models import ResumeFile
 from apps.candidate.models import Candidate, Skill, CandidateSkill, Education, Experience, Project, AwardAndCertification
-import pdfplumber
-import fitz
-import re
-import os
-from docx import Document
 
 
 def extract_details(text):
@@ -176,7 +176,7 @@ def extract_experience(text):
             "company_name": company_name if company_name else None,
             "start_date": start_date,
             "end_date": end_date,
-            "parsed_experience_text": entry  # Store raw experience text
+            "parsed_experience": entry  # Store raw experience text
         })
 
     return experiences_data
@@ -230,7 +230,7 @@ def extract_projects(text):
             "description": description if description else None,
             "start_date": start_date,
             "end_date": end_date,
-            "parsed_project_text": entry  # Store raw project text
+            "parsed_project": entry  # Store raw project text
         })
 
     return projects_data
@@ -286,7 +286,7 @@ def extract_awards_and_certifications(text):
             "name": award_cert_name if award_cert_name else None,
             "issuing_organization": issuing_organization if issuing_organization else None,
             "issue_date": issue_date,
-            "parsed_text": entry  # Store raw text for reference
+            "parsed_awards_and_certifications": entry  # Store raw text for reference
         })
 
     return awards_certifications_data

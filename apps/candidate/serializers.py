@@ -29,7 +29,7 @@ class CandidateSkillSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CandidateSkill
-        fields = ['id', 'skill', 'skill_name', 'proficiency_level', 'years_of_experience', 'parsed_skills']
+        fields = ['id', 'skill', 'skill_name', 'proficiency_level', 'years_of_experience']
 
 
 class EducationSerializer(serializers.ModelSerializer):
