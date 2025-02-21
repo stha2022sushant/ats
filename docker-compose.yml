@@ -1,0 +1,29 @@
+services:
+  ats:
+    build: ./
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./:/src/ats/
+    ports:
+      - 8000:8000
+    env_file:
+      - ./.env.dev
+
+
+  db:
+    image: postgres:15
+    container_name: ats
+    restart: always  # This must be changed 
+    volumes:
+      - ats_data:/var/lib/postgresql/data
+    env_file:
+      - .env.dev
+    ports:
+      - "5432:5432"  # Expose PostgreSQL port (optional)
+  
+  # Other services like your Django app can go here
+
+volumes:
+  ats_data:
+    # name: ats_data
+    external: true
